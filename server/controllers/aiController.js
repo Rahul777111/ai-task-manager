@@ -1,23 +1,53 @@
-const OpenAI = require('openai');
+const https = require('https');
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const gemini = (prompt) => new Promise((resolve, reject) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return reject(new Error('GEMINI_API_KEY not set'));
+
+  const body = JSON.stringify({
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+  });
+
+  const options = {
+    hostname: 'generativelanguage.googleapis.com',
+    path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+  };
+
+  const req = https.request(options, (res) => {
+    let data = '';
+    res.on('data', chunk => data += chunk);
+    res.on('end', () => {
+      try {
+        const json = JSON.parse(data);
+        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) return reject(new Error('Empty response from Gemini'));
+        resolve(text);
+      } catch (e) { reject(e); }
+    });
+  });
+  req.on('error', reject);
+  req.write(body);
+  req.end();
+});
+
+const extractJSON = (text) => {
+  const match = text.match(/```(?:json)?\n?([\s\S]*?)```/) || text.match(/(\[\s*\{[\s\S]*\}\s*\]|\{[\s\S]*\})/);
+  return JSON.parse(match ? match[1] || match[0] : text.trim());
+};
 
 exports.suggestTasks = async (req, res) => {
   const { goal } = req.body;
   if (!goal) return res.status(400).json({ success: false, message: 'Goal is required' });
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [{
-      role: 'system',
-      content: 'You are a productivity expert. Generate 5 actionable tasks for the given goal. Return JSON array with fields: title, description, priority (low/medium/high/critical), dueDate (ISO string, within next 30 days).'
-    }, {
-      role: 'user', content: `Generate tasks for: ${goal}`
-    }],
-    temperature: 0.7,
-  });
+  const text = await gemini(
+    `You are a productivity expert. Generate 5 actionable tasks for this goal: "${goal}".
+Return ONLY a valid JSON array (no markdown, no explanation) with fields: title (string), description (string), priority ("low"|"medium"|"high"|"critical"), dueDate (ISO string within next 30 days).`
+  );
 
-  const tasks = JSON.parse(completion.choices[0].message.content);
+  const tasks = extractJSON(text);
   res.status(200).json({ success: true, tasks });
 };
 
@@ -25,36 +55,28 @@ exports.breakdownTask = async (req, res) => {
   const { taskTitle, taskDescription } = req.body;
   if (!taskTitle) return res.status(400).json({ success: false, message: 'Task title is required' });
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [{
-      role: 'system',
-      content: 'Break down the given task into 3-7 specific subtasks. Return JSON array with fields: title (string), completed (false).'
-    }, {
-      role: 'user', content: `Task: ${taskTitle}\nDescription: ${taskDescription || ''}`
-    }],
-    temperature: 0.5,
-  });
+  const text = await gemini(
+    `Break down this task into 3-7 specific subtasks.
+Task: ${taskTitle}
+Description: ${taskDescription || ''}
+Return ONLY a valid JSON array (no markdown) with fields: title (string), completed (boolean, always false).`
+  );
 
-  const subtasks = JSON.parse(completion.choices[0].message.content);
+  const subtasks = extractJSON(text);
   res.status(200).json({ success: true, subtasks });
 };
 
 exports.prioritizeTask = async (req, res) => {
   const { taskTitle, taskDescription, dueDate } = req.body;
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [{
-      role: 'system',
-      content: 'Analyze the task and suggest a priority level. Return JSON: { priority: "low"|"medium"|"high"|"critical", reason: string }'
-    }, {
-      role: 'user',
-      content: `Title: ${taskTitle}\nDescription: ${taskDescription || ''}\nDue: ${dueDate || 'not set'}`
-    }],
-    temperature: 0.3,
-  });
+  const text = await gemini(
+    `Analyze this task and suggest a priority level.
+Title: ${taskTitle}
+Description: ${taskDescription || ''}
+Due: ${dueDate || 'not set'}
+Return ONLY valid JSON (no markdown): { "priority": "low"|"medium"|"high"|"critical", "reason": "short explanation" }`
+  );
 
-  const result = JSON.parse(completion.choices[0].message.content);
+  const result = extractJSON(text);
   res.status(200).json({ success: true, ...result });
 };
