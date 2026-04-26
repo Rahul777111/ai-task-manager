@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiTrash2, FiEdit2, FiClock, FiTag } from 'react-icons/fi';
+import { FiTrash2, FiEdit2, FiClock, FiTag, FiCheckCircle } from 'react-icons/fi';
 import { format, isPast } from 'date-fns';
 import { useTasks } from '../context/TaskContext';
 
@@ -65,7 +65,7 @@ export default function TaskCard({ task, onEdit }) {
         </div>
         <div className="flex flex-col gap-1">
           <button onClick={toggleStatus} className="p-1.5 rounded-lg hover:bg-primary-500/20 text-primary-400 transition-colors" title="Cycle status">
-            <FiCheckSquare className="text-sm" />
+            <FiCheckCircle className="text-sm" />
           </button>
           <button onClick={() => onEdit(task)} className="p-1.5 rounded-lg hover:bg-slate-600 text-slate-400 transition-colors">
             <FiEdit2 className="text-sm" />

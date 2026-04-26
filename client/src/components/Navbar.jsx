@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiCheckSquare, FiLogOut, FiZap } from 'react-icons/fi';
+import { FiHome, FiCheckCircle, FiLogOut, FiZap } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
@@ -25,7 +25,7 @@ export default function Navbar() {
             <Link to="/tasks" className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
               isActive('/tasks') ? 'bg-primary-600 text-white' : 'text-slate-300 hover:bg-slate-700'
             }`}>
-              <FiCheckSquare /> <span className="hidden sm:inline">Tasks</span>
+              <FiCheckCircle /> <span className="hidden sm:inline">Tasks</span>
             </Link>
           </div>
           <div className="flex items-center space-x-3">
