@@ -1,54 +1,81 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiZap, FiUser, FiMail, FiLock } from 'react-icons/fi';
+import { FiMail, FiLock, FiUser, FiZap, FiArrowRight, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
-import toast from 'react-hot-toast';
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, loading } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
-    setLoading(true);
+    setError('');
+    if (form.password.length < 6) return setError('Password must be at least 6 characters');
     try { await register(form.name, form.email, form.password); }
-    catch (err) { toast.error(err.response?.data?.message || 'Registration failed'); }
-    finally { setLoading(false); }
+    catch (err) { setError(err.response?.data?.message || 'Registration failed'); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="glass rounded-2xl p-8 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
+      <div className="fixed top-1/4 -right-32 w-96 h-96 rounded-full opacity-20 blur-3xl" style={{ background: 'radial-gradient(circle, #22d3ee, transparent)' }} />
+      <div className="fixed bottom-1/4 -left-32 w-96 h-96 rounded-full opacity-15 blur-3xl" style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)' }} />
+
+      <div className="w-full max-w-md animate-fade-in-up">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-600/20 mb-4">
-            <FiZap className="text-primary-400 text-3xl" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl btn-gradient mb-4 shadow-2xl shadow-indigo-500/30 animate-float">
+            <FiZap className="text-white text-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Create Account</h1>
-          <p className="text-slate-400 mt-1">Start managing tasks with AI</p>
+          <h1 className="text-3xl font-black text-white">Create account</h1>
+          <p className="text-slate-500 mt-2 text-sm">Start your AI-powered productivity journey</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {[{ icon: FiUser, name: 'name', label: 'Full Name', type: 'text' },
-            { icon: FiMail, name: 'email', label: 'Email', type: 'email' },
-            { icon: FiLock, name: 'password', label: 'Password', type: 'password' }].map(({ icon: Icon, name, label, type }) => (
-            <div key={name}>
-              <label className="block text-sm text-slate-400 mb-1">{label}</label>
+
+        <div className="glass-strong rounded-3xl p-8 neon-border">
+          {error && (
+            <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">{error}</div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {[{ key: 'name', label: 'Name', icon: FiUser, type: 'text', placeholder: 'D L Narayana' },
+              { key: 'email', label: 'Email', icon: FiMail, type: 'email', placeholder: 'you@example.com' }]
+              .map(({ key, label, icon: Icon, type, placeholder }) => (
+                <div key={key}>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">{label}</label>
+                  <div className="relative">
+                    <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
+                    <input type={type} required value={form[key]}
+                      onChange={e => setForm({ ...form, [key]: e.target.value })}
+                      placeholder={placeholder}
+                      className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-4 py-3.5 text-white text-sm input-glow placeholder-slate-600 transition-all"
+                    />
+                  </div>
+                </div>
+            ))}
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Password</label>
               <div className="relative">
-                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input type={type} value={form[name]} onChange={e => setForm(p => ({ ...p, [name]: e.target.value }))} required
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-primary-500" />
+                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
+                <input type={showPass ? 'text' : 'password'} required value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder="Min 6 characters"
+                  className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-12 py-3.5 text-white text-sm input-glow placeholder-slate-600 transition-all"
+                />
+                <button type="button" onClick={() => setShowPass(!showPass)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                  {showPass ? <FiEyeOff className="text-sm" /> : <FiEye className="text-sm" />}
+                </button>
               </div>
             </div>
-          ))}
-          <button type="submit" disabled={loading}
-            className="w-full py-3 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors">
-            {loading ? 'Creating...' : 'Create Account'}
-          </button>
-        </form>
-        <p className="text-center text-slate-400 mt-6 text-sm">
-          Already have an account? <Link to="/login" className="text-primary-400 hover:underline">Sign in</Link>
-        </p>
+            <button type="submit" disabled={loading}
+              className="btn-gradient w-full py-4 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 mt-2 disabled:opacity-50">
+              {loading ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : <><span>Create Account</span><FiArrowRight /></>}
+            </button>
+          </form>
+          <p className="text-center text-slate-500 text-sm mt-6">
+            Already have an account?{' '}
+            <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">Sign in →</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

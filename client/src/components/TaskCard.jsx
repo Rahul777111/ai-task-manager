@@ -1,78 +1,133 @@
-import React from 'react';
-import { FiTrash2, FiEdit2, FiClock, FiTag, FiCheckCircle } from 'react-icons/fi';
-import { format, isPast } from 'date-fns';
+import React, { useState } from 'react';
+import { FiEdit2, FiTrash2, FiClock, FiZap, FiCheckCircle, FiCircle, FiMoreVertical } from 'react-icons/fi';
 import { useTasks } from '../context/TaskContext';
+import toast from 'react-hot-toast';
 
-const priorityColors = {
-  low: 'bg-green-500/20 text-green-400 border-green-500/30',
-  medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  high: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  critical: 'bg-red-500/20 text-red-400 border-red-500/30',
+const priorityConfig = {
+  high: { class: 'badge-high', dot: 'bg-red-400', label: 'High', bar: 'from-red-500 to-rose-400' },
+  medium: { class: 'badge-medium', dot: 'bg-yellow-400', label: 'Med', bar: 'from-yellow-500 to-amber-400' },
+  low: { class: 'badge-low', dot: 'bg-green-400', label: 'Low', bar: 'from-green-500 to-emerald-400' },
 };
 
-const statusColors = {
-  'todo': 'bg-slate-500/20 text-slate-400',
-  'in-progress': 'bg-blue-500/20 text-blue-400',
-  'completed': 'bg-green-500/20 text-green-400',
+const statusConfig = {
+  'todo': { class: 'badge-todo', label: 'To Do', icon: FiCircle },
+  'in-progress': { class: 'badge-inprogress', label: 'In Progress', icon: FiClock },
+  'completed': { class: 'badge-completed', label: 'Done', icon: FiCheckCircle },
 };
 
 export default function TaskCard({ task, onEdit }) {
-  const { deleteTask, updateTask } = useTasks();
-  const isOverdue = task.dueDate && isPast(new Date(task.dueDate)) && task.status !== 'completed';
+  const { updateTask, deleteTask } = useTasks();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
-  const toggleStatus = () => {
-    const nextStatus = task.status === 'todo' ? 'in-progress' : task.status === 'in-progress' ? 'completed' : 'todo';
-    updateTask(task._id, { status: nextStatus });
+  const priority = priorityConfig[task.priority] || priorityConfig.medium;
+  const status = statusConfig[task.status] || statusConfig['todo'];
+  const StatusIcon = status.icon;
+  const isCompleted = task.status === 'completed';
+
+  const toggleComplete = async () => {
+    setCompleting(true);
+    await updateTask(task._id, { status: isCompleted ? 'todo' : 'completed' });
+    toast.success(isCompleted ? 'Task reopened' : '✅ Task completed!');
+    setCompleting(false);
   };
 
+  const handleDelete = async () => {
+    setMenuOpen(false);
+    await deleteTask(task._id);
+    toast.success('Task deleted');
+  };
+
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !isCompleted;
+  const dueFormatted = task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
+
   return (
-    <div className={`glass rounded-xl p-4 transition-all hover:border-primary-500/50 ${
-      isOverdue ? 'border-red-500/50' : 'border-slate-700/50'
-    }`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-2">
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${priorityColors[task.priority]}`}>{task.priority}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[task.status]}`}>{task.status}</span>
-            {task.aiGenerated && <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">✨ AI</span>}
+    <div className={`glass card-hover rounded-2xl overflow-hidden group relative transition-all ${
+      isCompleted ? 'opacity-60' : ''
+    } ${isOverdue ? 'border-red-500/30' : ''}`}>
+
+      {/* Priority accent bar */}
+      <div className={`h-0.5 w-full bg-gradient-to-r ${priority.bar}`} />
+
+      <div className="p-5">
+        {/* Top row */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <button
+              onClick={toggleComplete}
+              disabled={completing}
+              className="mt-0.5 flex-shrink-0 transition-all hover:scale-110 active:scale-95"
+            >
+              {completing
+                ? <div className="w-5 h-5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                : isCompleted
+                  ? <FiCheckCircle className="text-green-400 text-xl" />
+                  : <FiCircle className="text-slate-600 hover:text-indigo-400 text-xl transition-colors" />
+              }
+            </button>
+            <div className="flex-1 min-w-0">
+              <h3 className={`font-semibold text-sm leading-snug ${
+                isCompleted ? 'line-through text-slate-500' : 'text-white'
+              }`}>
+                {task.title}
+              </h3>
+              {task.description && (
+                <p className="text-slate-500 text-xs mt-1 line-clamp-2 leading-relaxed">{task.description}</p>
+              )}
+            </div>
           </div>
-          <h3 className={`font-medium text-sm ${task.status === 'completed' ? 'line-through text-slate-500' : 'text-white'}`}>
-            {task.title}
-          </h3>
-          {task.description && <p className="text-slate-400 text-xs mt-1 line-clamp-2">{task.description}</p>}
-          {task.dueDate && (
-            <div className={`flex items-center gap-1 mt-2 text-xs ${isOverdue ? 'text-red-400' : 'text-slate-400'}`}>
-              <FiClock className="shrink-0" />
-              <span>{isOverdue ? '⚠ Overdue: ' : ''}{format(new Date(task.dueDate), 'MMM dd, yyyy')}</span>
-            </div>
-          )}
-          {task.tags?.length > 0 && (
-            <div className="flex items-center gap-1 mt-2 flex-wrap">
-              <FiTag className="text-slate-500 text-xs" />
-              {task.tags.map(tag => (
-                <span key={tag} className="text-xs bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">#{tag}</span>
-              ))}
-            </div>
-          )}
-          {task.subtasks?.length > 0 && (
-            <div className="mt-2">
-              <div className="text-xs text-slate-400 mb-1">{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length} subtasks</div>
-              <div className="w-full bg-slate-700 rounded-full h-1">
-                <div className="bg-primary-500 h-1 rounded-full transition-all" style={{ width: `${(task.subtasks.filter(s => s.completed).length / task.subtasks.length) * 100}%` }} />
+
+          {/* Menu */}
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-1.5 rounded-lg text-slate-600 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+            >
+              <FiMoreVertical className="text-sm" />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-8 glass-strong rounded-xl border border-white/10 shadow-2xl overflow-hidden z-50 min-w-[120px]">
+                <button onClick={() => { onEdit(task); setMenuOpen(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-all">
+                  <FiEdit2 className="text-xs" /> Edit
+                </button>
+                <button onClick={handleDelete}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-all">
+                  <FiTrash2 className="text-xs" /> Delete
+                </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <button onClick={toggleStatus} className="p-1.5 rounded-lg hover:bg-primary-500/20 text-primary-400 transition-colors" title="Cycle status">
-            <FiCheckCircle className="text-sm" />
-          </button>
-          <button onClick={() => onEdit(task)} className="p-1.5 rounded-lg hover:bg-slate-600 text-slate-400 transition-colors">
-            <FiEdit2 className="text-sm" />
-          </button>
-          <button onClick={() => deleteTask(task._id)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors">
-            <FiTrash2 className="text-sm" />
-          </button>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-2 flex-wrap mt-4 pt-3 border-t border-white/5">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs px-2 py-0.5 rounded-lg font-semibold ${priority.class}`}>
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${priority.dot} mr-1`} />
+              {priority.label}
+            </span>
+            <span className={`text-xs px-2 py-0.5 rounded-lg font-medium ${status.class} flex items-center gap-1`}>
+              <StatusIcon className="text-xs" /> {status.label}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {task.aiGenerated && (
+              <span className="text-xs text-purple-400 flex items-center gap-1 bg-purple-500/10 px-2 py-0.5 rounded-lg border border-purple-500/20">
+                <FiZap className="text-xs" /> AI
+              </span>
+            )}
+            {dueFormatted && (
+              <span className={`text-xs flex items-center gap-1 px-2 py-0.5 rounded-lg ${
+                isOverdue
+                  ? 'text-red-400 bg-red-500/10 border border-red-500/20'
+                  : 'text-slate-500 bg-slate-800/60'
+              }`}>
+                <FiClock className="text-xs" />{dueFormatted}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

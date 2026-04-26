@@ -1,57 +1,94 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiZap, FiMail, FiLock } from 'react-icons/fi';
+import { FiMail, FiLock, FiZap, FiArrowRight, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
-import toast from 'react-hot-toast';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
   const [form, setForm] = useState({ email: '', password: '' });
-  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setError('');
     try { await login(form.email, form.password); }
-    catch (err) { toast.error(err.response?.data?.message || 'Login failed'); }
-    finally { setLoading(false); }
+    catch (err) { setError(err.response?.data?.message || 'Invalid credentials'); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="glass rounded-2xl p-8 w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
+
+      {/* Background orbs */}
+      <div className="fixed top-1/4 -left-32 w-96 h-96 rounded-full opacity-20 blur-3xl" style={{ background: 'radial-gradient(circle, #6366f1, transparent)' }} />
+      <div className="fixed bottom-1/4 -right-32 w-96 h-96 rounded-full opacity-20 blur-3xl" style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)' }} />
+
+      <div className="w-full max-w-md animate-fade-in-up">
+
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-600/20 mb-4">
-            <FiZap className="text-primary-400 text-3xl" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl btn-gradient mb-4 shadow-2xl shadow-indigo-500/30 animate-float">
+            <FiZap className="text-white text-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-white">AI Task Manager</h1>
-          <p className="text-slate-400 mt-1">Sign in to your account</p>
+          <h1 className="text-3xl font-black text-white">Welcome back</h1>
+          <p className="text-slate-500 mt-2 text-sm">Sign in to your TaskFlow AI account</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-slate-400 mb-1">Email</label>
-            <div className="relative">
-              <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} required
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-primary-500" />
+
+        {/* Card */}
+        <div className="glass-strong rounded-3xl p-8 neon-border">
+          {error && (
+            <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+              {error}
             </div>
-          </div>
-          <div>
-            <label className="block text-sm text-slate-400 mb-1">Password</label>
-            <div className="relative">
-              <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} required
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:border-primary-500" />
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Email</label>
+              <div className="relative">
+                <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
+                <input
+                  type="email" required
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                  placeholder="you@example.com"
+                  className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-4 py-3.5 text-white text-sm input-glow placeholder-slate-600 transition-all"
+                />
+              </div>
             </div>
-          </div>
-          <button type="submit" disabled={loading}
-            className="w-full py-3 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors">
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-        <p className="text-center text-slate-400 mt-6 text-sm">
-          No account? <Link to="/register" className="text-primary-400 hover:underline">Sign up</Link>
-        </p>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Password</label>
+              <div className="relative">
+                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
+                <input
+                  type={showPass ? 'text' : 'password'} required
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-10 pr-12 py-3.5 text-white text-sm input-glow placeholder-slate-600 transition-all"
+                />
+                <button type="button" onClick={() => setShowPass(!showPass)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                  {showPass ? <FiEyeOff className="text-sm" /> : <FiEye className="text-sm" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-gradient w-full py-4 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+            >
+              {loading ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" /> : <><span>Sign In</span><FiArrowRight /></>}
+            </button>
+          </form>
+
+          <p className="text-center text-slate-500 text-sm mt-6">
+            No account?{' '}
+            <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">Create one →</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

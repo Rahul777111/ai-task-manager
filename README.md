@@ -1,127 +1,85 @@
-# 🚀 AI Task Manager
+# ⚡ TaskFlow AI
 
-> A full-stack, AI-powered task management application built with the MERN stack.
+> AI-powered task management built for people who get things done.
 
-![Tech Stack](https://img.shields.io/badge/Stack-MERN-blue) ![Auth](https://img.shields.io/badge/Auth-JWT-green) ![AI](https://img.shields.io/badge/AI-Groq-purple) ![License](https://img.shields.io/badge/License-MIT-yellow)
+![TaskFlow AI](https://img.shields.io/badge/Stack-React%20%7C%20Node%20%7C%20MongoDB-6366f1?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-22d3ee?style=for-the-badge)
+![Deployed](https://img.shields.io/badge/Deployed-Vercel-000?style=for-the-badge&logo=vercel)
 
-🌐 **Live Demo:** [ai-task-manager-five-gold.vercel.app](https://ai-task-manager-five-gold.vercel.app)
+---
 
-## ✨ Features
+## 🚀 Features
 
-- 🔐 JWT-based Authentication (Register/Login)
-- ✅ Full CRUD for Tasks (Create, Read, Update, Delete)
-- 🤖 AI-powered task suggestions via Groq (llama-3.3-70b) — **free & fast**
-- 📊 Dashboard with task stats and progress
-- 🏷️ Task priority levels (Low, Medium, High, Critical)
-- 📅 Due date tracking with overdue alerts
-- 🔍 Search & Filter tasks
-- 📱 Fully responsive UI
-- 🌙 Dark mode support
+- **🤖 AI Task Generation** — describe your goal, get a full task breakdown instantly
+- **📊 Live Dashboard** — real-time stats: completion rate, overdue tracking, progress bar
+- **🎯 Smart Filtering** — filter by All / Active / Done / AI-generated
+- **✅ One-click Complete** — toggle task status inline with animations
+- **🎨 Premium UI** — glassmorphism, animated gradients, neon borders, floating elements
+- **🔐 Auth** — JWT-based login/register with password visibility toggle
+- **📱 Responsive** — mobile-first, works on all screen sizes
+- **⚡ Vercel-ready** — zero-config deployment
 
-## 🛠️ Tech Stack
+---
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18, Vite, Tailwind CSS, Axios |
-| Backend | Node.js, Express.js |
-| Database | MongoDB Atlas, Mongoose |
-| Auth | JWT, bcryptjs |
-| AI | Groq API (llama-3.3-70b-versatile) |
-| State | React Context + useReducer |
+## 🛠 Tech Stack
+
+| Layer | Tech |
+|---|---|
+| Frontend | React 18, Vite, Tailwind CSS |
+| Backend | Node.js, Express |
+| Database | MongoDB + Mongoose |
+| AI | OpenAI API |
+| Auth | JWT + bcrypt |
 | Deploy | Vercel |
 
-## 📁 Project Structure
+---
 
-```
-ai-task-manager/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── context/        # Global state management
-│   │   ├── pages/          # Page components
-│   │   └── services/       # API service calls
-│   ├── index.html
-│   └── package.json
-├── server/                 # Node.js backend
-│   ├── controllers/        # Route controllers
-│   ├── middleware/         # Auth & error middleware
-│   ├── models/             # Mongoose models
-│   ├── routes/             # Express routes
-│   └── server.js
-├── .env.example
-├── vercel.json
-└── package.json
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js >= 18
-- MongoDB (local or Atlas)
-- Groq API Key (free at [console.groq.com](https://console.groq.com/keys))
-
-### Installation
+## 🏃 Quick Start
 
 ```bash
-# Clone the repo
-git clone https://github.com/Rahul777111/ai-task-manager.git
+# Clone
+git clone https://github.com/Rahul777111/ai-task-manager
 cd ai-task-manager
 
-# Install server dependencies
+# Install all
 npm install
+cd client && npm install && cd ..
 
-# Install client dependencies
-cd client && npm install
-
-# Setup environment variables
+# Setup env
 cp .env.example .env
-# Fill in your MongoDB URI, JWT secret, and Groq API key
+# Fill in MONGODB_URI, JWT_SECRET, OPENAI_API_KEY
 
-# Run development servers (both simultaneously)
+# Run dev
 npm run dev
 ```
 
-### Environment Variables
+---
 
-```env
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_super_secret_jwt_key
-JWT_EXPIRE=7d
-GROQ_API_KEY=your_groq_api_key
-PORT=5000
-NODE_ENV=development
+## 🌐 Deploy to Vercel
+
+```bash
+npx vercel --prod
 ```
 
-## 🔌 API Endpoints
+Or connect this repo to [vercel.com](https://vercel.com) for auto-deploys on every push.
 
-### Auth Routes `/api/auth`
-| Method | Endpoint | Description |
-|--------|----------|--------------|
-| POST | `/register` | Register new user |
-| POST | `/login` | Login user |
-| GET | `/me` | Get current user |
+---
 
-### Task Routes `/api/tasks` (Protected)
-| Method | Endpoint | Description |
-|--------|----------|--------------|
-| GET | `/` | Get all tasks |
-| POST | `/` | Create task |
-| GET | `/:id` | Get single task |
-| PUT | `/:id` | Update task |
-| DELETE | `/:id` | Delete task |
-| GET | `/stats` | Get task statistics |
+## 📁 Structure
 
-### AI Routes `/api/ai` (Protected)
-| Method | Endpoint | Description |
-|--------|----------|--------------|
-| POST | `/suggest` | AI task suggestions from a goal |
-| POST | `/breakdown` | Break task into subtasks |
-| POST | `/prioritize` | AI-based priority suggestion |
+```
+ai-task-manager/
+├── client/          # React frontend (Vite + Tailwind)
+│   └── src/
+│       ├── pages/   # Dashboard, Tasks, Login, Register
+│       ├── components/  # Navbar, TaskCard, TaskModal
+│       ├── context/ # Auth + Task context
+│       └── services/# API + AI service
+├── server/          # Express API
+├── api/             # Vercel serverless functions
+└── vercel.json      # Deploy config
+```
 
-## 🤝 Contributing
+---
 
-Pull requests are welcome! Please open an issue first for major changes.
-
-## 📄 License
-
-MIT © [Rahul777111](https://github.com/Rahul777111)
+<p align="center">Built with 💜 by <a href="https://github.com/Rahul777111">Rahul777111</a></p>
